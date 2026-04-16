@@ -1,0 +1,172 @@
+assignment 2
+
+
+q1 - median of two sorted arrays in O(log(m+n))
+
+approach: binary search on the smaller array to find the correct partition
+
+idea:
+  let a have size m, b have size n (assume m <= n, else swap)
+  we want to split both arrays so that:
+    left side has floor((m+n)/2) elements total
+    all left elements <= all right elements
+
+  binary search on i = partition index in a (0 to m)
+  j = (m+n+1)/2 - i  (partition index in b)
+
+  valid partition when:
+    a[i-1] <= b[j]  and  b[j-1] <= a[i]
+
+  if a[i-1] > b[j]: i is too large, move left
+  if b[j-1] > a[i]: i is too small, move right
+
+algorithm:
+
+  find_median(a, b, m, n):
+    if m > n: return find_median(b, a, n, m)
+    lo = 0, hi = m
+    while lo <= hi:
+      i = (lo + hi) / 2
+      j = (m + n + 1) / 2 - i
+
+      if i > 0 and a[i-1] > b[j]:
+        hi = i - 1
+      else if i < m and b[j-1] > a[i]:
+        lo = i + 1
+      else:
+        // valid partition found
+        if i == 0: max_left = b[j-1]
+        else if j == 0: max_left = a[i-1]
+        else: max_left = max(a[i-1], b[j-1])
+
+        if (m + n) is odd: return max_left
+
+        if i == m: min_right = b[j]
+        else if j == n: min_right = a[i]
+        else: min_right = min(a[i], b[j])
+
+        return (max_left + min_right) / 2
+
+time complexity:
+  binary search runs on the smaller array of size m
+  each step halves the search space
+  O(log(m)) = O(log(m+n))  since m <= m+n
+
+
+q2 - solve recurrences (theta bound)
+
+a. T(n) = 2T(n/3) + 1
+
+   master theorem: a=2, b=3, f(n)=1
+   n^(log_b(a)) = n^(log_3(2)) ≈ n^0.631
+
+   f(n) = 1 = O(n^(log_3(2) - e)) for some e > 0
+   this is case 1
+
+   answer: T(n) = theta(n^(log_3(2)))
+
+
+b. T(n) = 5T(n/4) + n
+
+   master theorem: a=5, b=4, f(n)=n
+   n^(log_b(a)) = n^(log_4(5)) ≈ n^1.16
+
+   f(n) = n = O(n^(log_4(5) - e)) for small e > 0
+   this is case 1
+
+   answer: T(n) = theta(n^(log_4(5)))
+
+
+q3 - master theorem
+
+a. T(n) = 64T(n/4) + n^4
+
+   a=64, b=4, f(n)=n^4
+   n^(log_b(a)) = n^(log_4(64)) = n^3
+
+   f(n) = n^4 = omega(n^(3+1)), so case 3 applies
+   regularity check: 64*(n/4)^4 = 64*n^4/256 = n^4/4 <= c*n^4 for c=1/4 < 1  (holds)
+
+   answer: T(n) = theta(n^4)
+
+
+b. T(n) = 64T(n/4) + n^3
+
+   a=64, b=4, f(n)=n^3
+   n^(log_b(a)) = n^(log_4(64)) = n^3
+
+   f(n) = n^3 = theta(n^3) = theta(n^(log_4(64)))
+   this is case 2 (k=0 in extended case 2)
+
+   answer: T(n) = theta(n^3 * log(n))
+
+
+q4 - big-oh + recursion tree + justification
+
+a. T(n) = T(n-2) + 1
+
+   big-oh bound: O(n)
+
+   recursion tree:
+     level 0:  T(n)        cost 1
+     level 1:  T(n-2)      cost 1
+     level 2:  T(n-4)      cost 1
+     ...
+     level k:  T(n-2k)     cost 1
+     stops when n-2k = base case, so k = n/2 levels
+
+     total cost = n/2 * 1 = n/2
+
+   justification (iteration):
+     T(n) = T(n-2) + 1
+          = T(n-4) + 2
+          = T(n-6) + 3
+          = T(n-2k) + k
+     at k = n/2: T(n) = T(0) + n/2 = theta(n)
+
+   answer: T(n) = theta(n)
+
+
+b. T(n) = 2T(n/2) + n*lg^2(n)
+
+   big-oh bound: O(n * log^3(n))
+
+   recursion tree:
+     level 0:  2^0 subproblems, size n,   cost = n*lg^2(n)
+     level 1:  2^1 subproblems, size n/2, cost = 2*(n/2)*lg^2(n/2) ≈ n*lg^2(n)
+     level 2:  2^2 subproblems, size n/4, cost = 4*(n/4)*lg^2(n/4) ≈ n*lg^2(n)
+     ...
+     level k:  cost ≈ n * lg^2(n/2^k)
+     tree height = log(n)
+
+     each level cost is slightly smaller but roughly n*lg^2(n)
+     total cost ≈ n * sum of lg^2 terms over log(n) levels
+
+   justification (master theorem extended case 2):
+     a=2, b=2, n^(log_2(2)) = n
+     f(n) = n*lg^2(n) = theta(n^1 * log^2(n))
+     extended case 2: if f(n) = theta(n^(log_b(a)) * log^k(n)) then T(n) = theta(n^(log_b(a)) * log^(k+1)(n))
+     here k=2, so:
+
+   answer: T(n) = theta(n * log^3(n))
+
+
+c. T(n) = 2T(n/4) + n
+
+   big-oh bound: O(n)
+
+   recursion tree:
+     level 0:  2^0 subproblems, size n,    cost = n
+     level 1:  2^1 subproblems, size n/4,  cost = 2*(n/4) = n/2
+     level 2:  2^2 subproblems, size n/16, cost = 4*(n/16) = n/4
+     level k:  cost = (2^k)*(n/4^k) = n*(2/4)^k = n*(1/2)^k
+     tree height = log_4(n)
+
+     total cost = n * sum_{k=0}^{log_4(n)} (1/2)^k <= n * 2  (geometric series)
+
+   justification (master theorem case 3):
+     a=2, b=4, n^(log_4(2)) = n^0.5 = sqrt(n)
+     f(n) = n = omega(n^(0.5 + 0.5)), so case 3 applies
+     regularity: 2*(n/4) = n/2 <= c*n for c=1/2 < 1  (holds)
+
+   answer: T(n) = theta(n)
